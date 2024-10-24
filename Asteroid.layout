@@ -1,0 +1,13 @@
+[Editors]
+Order=0,3
+Focused=3
+[Editor_0]
+CursorCol=1
+CursorRow=16
+TopLine=1
+LeftChar=1
+[Editor_3]
+CursorCol=18
+CursorRow=12
+TopLine=1
+LeftChar=1
