@@ -1,0 +1,18 @@
+uniform vec2 lineStart;
+uniform vec2 lineEnd;
+uniform vec3 glowColor;
+uniform float glowIntensity;
+
+void main(){
+    vec2 fragPos = gl_FragCoord.xy / vec2(800.0, 600.0); // Replace with window size
+    vec2 lineDir = lineEnd - lineStart;
+    float lineLen = length(lineDir);
+    vec2 lineDirNormalized = lineDir / lineLen;
+    vec2 toFrag = fragPos - lineStart;
+    float proj = dot(toFrag, lineDirNormalized);
+    proj = clamp(proj, 0.0, lineLen);
+    vec2 closestPoint = lineStart + proj * lineDirNormalized;
+    float distanceToLine = length(fragPos - closestPoint);
+    float intensity = glowIntensity / (distanceToLine + 0.00001);
+    gl_FragColor = vec4(glowColor * intensity, 1.0);
+}

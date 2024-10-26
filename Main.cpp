@@ -1,8 +1,9 @@
 #include <string>
-#define GLUT_DISABLE_ATEXIT_HACK
-#include "glut.h"
 #include "Common.h"
+#define GLUT_DISABLE_ATEXIT_HACK
+#include "GL/freeglut.h"
 
+void initShaders();
 int windowNumber;
 int lastUpdateTime = 0;
 void kill();
@@ -74,15 +75,9 @@ void onDisplay(){
     glutSwapBuffers();
 }
 
-void onVisibilityChange(int vis){
-    if (vis == GLUT_VISIBLE) glutIdleFunc(&onUpdate);
-    else glutIdleFunc(nullptr);
-}
-
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv){
     glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
     glutInitWindowSize(800, 800);
     windowNumber = glutCreateWindow("Asteroids Example for C++ Beginners");
     glutIgnoreKeyRepeat(1);
@@ -91,31 +86,32 @@ int main(int argc, char** argv)
     glutSpecialFunc(&onSpecialKeyPressed);
     glutSpecialUpFunc(&onSpecialKeyUp);
     glutDisplayFunc(&onDisplay);
-    glutVisibilityFunc(&onVisibilityChange);
+    glutIdleFunc(&onUpdate);
     glOrtho(0, ORTHO_MAX, 0, ORTHO_MAX, -1.0, 1.0);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    initShaders();
     initPlayer();
     glutMainLoop();
     return 0;
 }
 
-double wrap_axis(double x, double lower_bound, double upper_bound) {
-    if (x < lower_bound) {
-        return x + upper_bound - lower_bound;
+double wrapAxis(double x, double lowerBound, double upperBound) {
+    if (x < lowerBound) {
+        return x + upperBound - lowerBound;
     }
-    else if (x > upper_bound) {
-        return x - upper_bound + lower_bound;
+    else if (x > upperBound) {
+        return x - upperBound + lowerBound;
     }
     return x;
 }
 
 Motion step(Motion last, double delta, double screenWrap) {
-    double upper_bound = ORTHO_MAX * screenWrap;
-    double lower_bound = -(screenWrap - 1) * ORTHO_MAX;
+    double upperBound = ORTHO_MAX * screenWrap;
+    double lowerBound = -(screenWrap - 1) * ORTHO_MAX;
     Motion next = last;
-    next.x = wrap_axis(last.x + last.xv * delta, lower_bound, upper_bound);
-    next.y = wrap_axis(last.y + last.yv * delta, lower_bound, upper_bound);
+    next.x = wrapAxis(last.x + last.xv * delta, lowerBound, upperBound);
+    next.y = wrapAxis(last.y + last.yv * delta, lowerBound, upperBound);
     next.angle += last.angularVelocity * delta;
     return next;
 }

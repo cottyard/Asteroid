@@ -2,7 +2,7 @@
 #include <math.h>
 #include "Common.h"
 #define GLUT_DISABLE_ATEXIT_HACK
-#include "glut.h"
+#include "GL/freeglut.h"
 
 const int dustFadingTime = 1500;
 const int spawnCooldown = 2000;
@@ -104,8 +104,9 @@ Asteroid spawnAsteroid() {
 void drawDust(Dust dust) {
     glPointSize(2.2);
     glBegin(GL_POINTS);
-    glColor4f(dust.color[0], dust.color[1], dust.color[2], 2 - 2 * ((GLfloat)dust.timeExisted / dustFadingTime));
-    glVertex2f(dust.motion.x, dust.motion.y);
+	    glColor4f(dust.color[0], dust.color[1], dust.color[2],
+				  2 - 2 * ((GLfloat)dust.timeExisted / dustFadingTime));
+	    glVertex2f(dust.motion.x, dust.motion.y);
     glEnd();
 }
 

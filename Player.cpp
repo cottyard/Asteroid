@@ -1,7 +1,7 @@
 #include <math.h>
 #include "Common.h"
 #define GLUT_DISABLE_ATEXIT_HACK
-#include "glut.h"
+#include "GL/freeglut.h"
 
 const int shootCooldown = 180;
 Point playerFront(1.5, 0);
@@ -62,27 +62,34 @@ void drawBullets() {
     glEnd();
 }
 
+void useShader_Glow();
+void endShader();
+
 void drawPlayer(){
     if (!alive) return;
     glPushMatrix();
+    
+    useShader_Glow();
     glTranslatef(motion.x, motion.y, 0.0);
     glRotatef(motion.angle, 0.0, 0.0, 1.0);
     glColor3f(1.0, 1.0, 0.0);
     glBegin(GL_LINE_LOOP);
-    glVertex2f(playerFront.x, playerFront.y);
-    glVertex2f(playerRearLeft.x, playerRearLeft.y);
-    glVertex2f(-0.5, 0.0);
-    glVertex2f(playerRearRight.x, playerRearRight.y);
-    glVertex2f(playerFront.x, playerFront.y);
+	    glVertex2f(playerFront.x, playerFront.y);
+	    glVertex2f(playerRearLeft.x, playerRearLeft.y);
+	    glVertex2f(-0.5, 0.0);
+	    glVertex2f(playerRearRight.x, playerRearRight.y);
+	    glVertex2f(playerFront.x, playerFront.y);
     glEnd();
     if (thrusting) {
         glColor3f(1.0, 0.0, 0.0);
         glBegin(GL_LINE_STRIP);
-        glVertex2f(-0.75, -0.5);
-        glVertex2f(-1.75, 0);
-        glVertex2f(-0.75, 0.5);
+	        glVertex2f(-0.75, -0.5);
+	        glVertex2f(-1.75, 0);
+	        glVertex2f(-0.75, 0.5);
         glEnd();
     }
+    
+    endShader();
     glPopMatrix();
 }
 
