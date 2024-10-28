@@ -54,15 +54,3 @@ void setupShaders() {
     glDeleteShader(fragmentShader);
 }
 
-void useShader_Glow(){
-    glUseProgram(glowShader);
-    glUniform2f(glGetUniformLocation(glowShader, "lineStart"), 0.3f, 0.5f);
-    glUniform2f(glGetUniformLocation(glowShader, "lineEnd"), 0.7f, 0.5f);
-    glUniform3f(glGetUniformLocation(glowShader, "glowColor"), 1.0f, 0.5f, 0.0f);
-    glUniform1f(glGetUniformLocation(glowShader, "glowIntensity"), 0.01f);
-}
-
-void endShader(){
-	glUseProgram(0);
-}
-
