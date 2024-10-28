@@ -130,9 +130,8 @@ void drawAsteroid(Asteroid& asteroid) {
     glPushMatrix();
     glTranslatef(asteroid.motion.x, asteroid.motion.y, 0.0);
     glRotatef(asteroid.motion.angle, 0.0, 0.0, 1.0);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glColor3f(0.9, 0.9, 0.9);
-    glBegin(GL_POLYGON);
+    glBegin(GL_LINE_LOOP);
     for (auto& v : asteroid.vertices) glVertex2f(v.x, v.y);
     glEnd();
     glPopMatrix();

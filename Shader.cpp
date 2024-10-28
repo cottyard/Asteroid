@@ -24,17 +24,26 @@ char* readFileAsCharArray(const std::string& filename) {
     }
 }
 
+GLuint compileShader(GLenum type, const char* source) {
+    GLuint shader = glCreateShader(type);
+    glShaderSource(shader, 1, &source, nullptr);
+    glCompileShader(shader);
+    int success;
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        char infoLog[512];
+        glGetShaderInfoLog(shader, 512, nullptr, infoLog);
+        std::cout << "Shader Compilation Error: " << infoLog << std::endl;
+    }
+    return shader;
+}
+
 void setupShaders() {
-	char* vertexShaderSource = readFileAsCharArray("shaders/vertex.txt");
-	char* fragmentShaderSource = readFileAsCharArray("shaders/fragment.txt");
-
-    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
-    glCompileShader(vertexShader);
-
-    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr);
-    glCompileShader(fragmentShader);
+	char* vertexSource = readFileAsCharArray("shaders/vertex.txt");
+	char* fragmentSource = readFileAsCharArray("shaders/fragment.txt");
+	
+    GLuint vertexShader =  compileShader(GL_VERTEX_SHADER, vertexSource);
+    GLuint fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentSource);
 
     glowShader = glCreateProgram();
     glAttachShader(glowShader, vertexShader);
@@ -55,10 +64,5 @@ void useShader_Glow(){
 
 void endShader(){
 	glUseProgram(0);
-}
-
-void initShaders(){	
-	glewInit();
-	setupShaders();
 }
 

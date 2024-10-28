@@ -3,6 +3,7 @@
 #define GLUT_DISABLE_ATEXIT_HACK
 #include "GL/freeglut.h"
 
+const double bulletSize = 0.3;
 const int shootCooldown = 180;
 Point playerFront(1.5, 0);
 Point playerRearLeft(-1.0, -1.1);
@@ -52,24 +53,27 @@ void initPlayer(){
     alive = true;
 }
 
-void drawBullets() {
-    glPointSize(3.0);
-    glBegin(GL_POINTS);
-    glColor3f(1.0, 0.0, 1.0);
-    for (size_t i = 0; i < bullets.size(); i++) {
-        glVertex2f(bullets[i].x, bullets[i].y);
-    }
-    glEnd();
+void drawBullet(int i) {
+	glPushMatrix();
+	glTranslatef(bullets[i].x, bullets[i].y, 0.0);
+	glBegin(GL_LINE_LOOP);
+		for(int i=0;i<10;i++){
+			glVertex2f(bulletSize * cos(2*PI*i/10),
+					   bulletSize * sin(2*PI*i/10));
+		}
+	glEnd();
+	glPopMatrix();
 }
 
-void useShader_Glow();
-void endShader();
+void drawBullets() {
+	glColor3f(0.8,0.2,0.5);
+    for (size_t i = 0; i < bullets.size(); i++) drawBullet(i);
+}
 
 void drawPlayer(){
     if (!alive) return;
+    glLineWidth(2);
     glPushMatrix();
-    
-    useShader_Glow();
     glTranslatef(motion.x, motion.y, 0.0);
     glRotatef(motion.angle, 0.0, 0.0, 1.0);
     glColor3f(1.0, 1.0, 0.0);
@@ -88,9 +92,8 @@ void drawPlayer(){
 	        glVertex2f(-0.75, 0.5);
         glEnd();
     }
-    
-    endShader();
     glPopMatrix();
+    glLineWidth(1);
 }
 
 bool inBoundary(int x) {

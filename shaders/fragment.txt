@@ -1,18 +1,22 @@
-uniform vec2 lineStart;
-uniform vec2 lineEnd;
-uniform vec3 glowColor;
-uniform float glowIntensity;
-
-void main(){
-    vec2 fragPos = gl_FragCoord.xy / vec2(800.0, 600.0); // Replace with window size
-    vec2 lineDir = lineEnd - lineStart;
-    float lineLen = length(lineDir);
-    vec2 lineDirNormalized = lineDir / lineLen;
-    vec2 toFrag = fragPos - lineStart;
-    float proj = dot(toFrag, lineDirNormalized);
-    proj = clamp(proj, 0.0, lineLen);
-    vec2 closestPoint = lineStart + proj * lineDirNormalized;
-    float distanceToLine = length(fragPos - closestPoint);
-    float intensity = glowIntensity / (distanceToLine + 0.00001);
-    gl_FragColor = vec4(glowColor * intensity, 1.0);
+#version 330 core
+out vec4 FragColor;
+in vec2 TexCoords;
+uniform sampler2D screenTexture;
+void main() {
+    vec2 texOffset = 1.0 / textureSize(screenTexture, 0);
+    vec3 color = texture(screenTexture, TexCoords).rgb;
+    vec3 glow = vec3(0.0);
+    int s = 15;
+    for(int x = -s; x <= s; x++) {
+        for(int y = -s; y <= s; y++) {
+            float distance = pow(abs(x),2) + pow(abs(y),2);
+            if (distance > s*s || distance < 1) continue;
+            vec2 offset = vec2(x, y) * texOffset;
+            vec3 sample = texture(screenTexture, TexCoords + offset).rgb;
+            float intensity = dot(glow, vec3(1.0)) + 1;
+            float damping = pow(distance, 0.6) * 10 * intensity * intensity;
+            glow += sample / damping;
+        }
+    }
+    FragColor = vec4(color + glow, 1.0);
 }
