@@ -70,9 +70,25 @@ void onUpdate() {
     glutPostWindowRedisplay(windowNumber);
 }
 
+void drawGrid() {
+    glColor4f(0.0, 0.0, 0.8, 0.5);
+    float step = ORTHO_MAX / 10.0f;
+    glBegin(GL_LINES);
+    for (float x = 0; x <= ORTHO_MAX; x += step) {
+        glVertex2f(x, 0);
+        glVertex2f(x, ORTHO_MAX);
+    }
+    for (float y = 0; y <= ORTHO_MAX; y += step) {
+        glVertex2f(0, y);
+        glVertex2f(ORTHO_MAX, y);
+    }
+    glEnd();
+}
+
 void onDisplay(){
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    drawGrid();
     drawPlayer();
     drawBullets();
     drawAsteroids();
@@ -111,7 +127,16 @@ int main(int argc, char** argv){
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
     glutInitWindowSize(windowSize, windowSize);
     windowNumber = glutCreateWindow("Asteroids Example for C++ Beginners");
-    glOrtho(0, ORTHO_MAX, 0, ORTHO_MAX, -1.0, 1.0);
+	// 2D
+	//glOrtho(0, ORTHO_MAX, 0, ORTHO_MAX, -1.0, 1.0);
+	// 3D
+    glMatrixMode(GL_PROJECTION);
+	gluPerspective(60.0, 1.0, 1.0, 1000.0);
+	glMatrixMode(GL_MODELVIEW);
+	gluLookAt(ORTHO_MAX / 2, 0, ORTHO_MAX, 
+	          ORTHO_MAX / 2, ORTHO_MAX / 2, 0, 
+	          0, 1, 0);
+
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
