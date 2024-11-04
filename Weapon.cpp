@@ -129,8 +129,8 @@ void updateProjectiles(int delta) {
     		double v = velocity(m);
     		if (v > missileVelocityCap) v = missileVelocityCap;
 			double a = delta * 0.0001 * pow((1 - v / missileVelocityCap), 2) * 
-						lorentzian(correctionAngle, 100, 100, 0) *
-			            lorentzian(modulate(correctionBearing + 180), 100000, 2000, 1);
+					   lorentzian(correctionAngle, 100, 100, 0) *
+			           lorentzian(modulate(correctionBearing + 180), 100000, 2000, 1);
 			m = accelerate(m, a);
     		missiles[i].fuel -= a;
     		missiles[i].acceleration = a;

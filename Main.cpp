@@ -28,7 +28,8 @@ void destroyAsteroid(size_t);
 void setupShaders();
 
 extern std::vector<Asteroid> asteroids;
-extern GLuint glowShader;
+extern GLuint glowShaderProgram;
+extern GLuint shockShaderProgram;
 GLuint framebuffer, textureColorbuffer;
 int score = 0;
 
@@ -86,6 +87,9 @@ void drawGrid() {
 }
 
 void onDisplay(){
+	static float time = 0.0f;
+	time += 0.001f;
+	
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     drawGrid();
@@ -94,11 +98,22 @@ void onDisplay(){
     drawAsteroids();
     drawDusts();
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);    
     glClear(GL_COLOR_BUFFER_BIT);
-    glUseProgram(glowShader);
+//    glUseProgram(glowShaderProgram);
+//    glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
+//    glBegin(GL_QUADS);
+//	    glTexCoord2f(0.0f, 0.0f); glVertex2f(-1.0f, -1.0f);
+//	    glTexCoord2f(1.0f, 0.0f); glVertex2f(1.0f, -1.0f);
+//	    glTexCoord2f(1.0f, 1.0f); glVertex2f(1.0f, 1.0f);
+//	    glTexCoord2f(0.0f, 1.0f); glVertex2f(-1.0f, 1.0f);
+//    glEnd();
+    glUseProgram(shockShaderProgram);
     glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
+    GLint centerLocation = glGetUniformLocation(shockShaderProgram, "center");
+	GLint timeLocation = glGetUniformLocation(shockShaderProgram, "time"); 
+	glUniform2f(centerLocation, 0.5f, 0.5f);
+	glUniform1f(timeLocation, time);
     glBegin(GL_QUADS);
 	    glTexCoord2f(0.0f, 0.0f); glVertex2f(-1.0f, -1.0f);
 	    glTexCoord2f(1.0f, 0.0f); glVertex2f(1.0f, -1.0f);
@@ -106,6 +121,7 @@ void onDisplay(){
 	    glTexCoord2f(0.0f, 1.0f); glVertex2f(-1.0f, 1.0f);
     glEnd();
     glUseProgram(0);
+    
     displayScore();
     glutSwapBuffers();
 }
