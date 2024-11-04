@@ -5,8 +5,8 @@
 #include "GL/freeglut.h"
 
 const int dustFadingTime = 1500;
-const int spawnCooldown = 2000;
-int spawnTimer = 0;
+const int spawnCooldown = 20000;
+int spawnTimer = spawnCooldown;
 
 struct Dust {
     double color[3];
@@ -29,14 +29,13 @@ Point randomSpawnPoint() {
 Asteroid createAsteroid(int vertexCount, Point at, double radius){
     Asteroid a;
     a.radius = radius;
-    a.motion.x = at.x;
-    a.motion.y = at.y;
+    a.motion.at = at;
     a.motion.angle = 0;
     a.motion.angularVelocity = (rand() % 21 - 10) / 100.0;
     int direction = rand() % 360;
     double speed = (rand() % 30 + 100) / 10000.0;
-    a.motion.xv = speed * cos(direction * PI / 180);
-    a.motion.yv = speed * sin(direction * PI / 180);
+    a.motion.v = Point(speed * cos(direction * PI / 180),
+					   speed * sin(direction * PI / 180));
 
     int angle = 0;
     for (int i = 0; i < vertexCount; i++) {
@@ -48,18 +47,17 @@ Asteroid createAsteroid(int vertexCount, Point at, double radius){
     return a;
 }
 
-Dust createDust(Motion at) {
+Dust createDust(Point at) {
     Dust d{};
     d.color[0] = (double)rand() / RAND_MAX;
     d.color[1] = (double)rand() / RAND_MAX;
     d.color[2] = (double)rand() / RAND_MAX;
     Motion m{};
-    m.x = at.x;
-    m.y = at.y;
+    m.at = at;
     int direction = rand() % 360;
     double speed = (rand() % 100 + 100) / 10000.0;
-    m.xv = speed * cos(direction * PI / 180);
-    m.yv = speed * sin(direction * PI / 180);
+    m.v = Point(speed * cos(direction * PI / 180),
+    			speed * sin(direction * PI / 180));
     d.motion = m;
     return d;
 }
@@ -71,10 +69,10 @@ void destroyAsteroid(size_t i) {
     int dustCountMin = (int)ast.radius * 2 + 1;
     int dustCount = rand() % dustCountMin + dustCountMin;
     for (int i = 0; i < dustCount; i++) {
-        dusts.push_back(createDust(ast.motion));
+        dusts.push_back(createDust(ast.motion.at));
     }
     int vertexCount = ast.vertices.size();
-    Point p = Point(ast.motion.x, ast.motion.y);
+    Point p = ast.motion.at;
     double r = ast.radius / 2;
     if (vertexCount == 7) {
         asteroids.push_back(createAsteroid(4, p, r));
@@ -106,12 +104,12 @@ void drawDust(Dust dust) {
     glBegin(GL_POINTS);
 	    glColor4f(dust.color[0], dust.color[1], dust.color[2],
 				  2 - 2 * ((GLfloat)dust.timeExisted / dustFadingTime));
-	    glVertex2f(dust.motion.x, dust.motion.y);
+	    glVertex2f(dust.motion.at.x, dust.motion.at.y);
     glEnd();
 }
 
 void drawDusts() {
-    for (auto& ds: dusts) drawDust(ds);
+    for (const auto& ds: dusts) drawDust(ds);
 }
 
 void updateDusts(int delta) {
@@ -126,19 +124,19 @@ void updateDusts(int delta) {
     }
 }
 
-void drawAsteroid(Asteroid& asteroid) {
+void drawAsteroid(const Asteroid& asteroid) {
     glPushMatrix();
-    glTranslatef(asteroid.motion.x, asteroid.motion.y, 0.0);
+    glTranslatef(asteroid.motion.at.x, asteroid.motion.at.y, 0.0);
     glRotatef(asteroid.motion.angle, 0.0, 0.0, 1.0);
     glColor3f(0.9, 0.9, 0.9);
     glBegin(GL_LINE_LOOP);
-    for (auto& v : asteroid.vertices) glVertex2f(v.x, v.y);
+    for (const auto& v : asteroid.vertices) glVertex2f(v.x, v.y);
     glEnd();
     glPopMatrix();
 }
 
 void drawAsteroids() {
-    for (auto& ast : asteroids) drawAsteroid(ast);
+    for (const auto& ast : asteroids) drawAsteroid(ast);
 }
 
 void updateAsteroids(int delta){
@@ -150,4 +148,22 @@ void updateAsteroids(int delta){
     for (size_t i = 0; i < asteroids.size(); i++) {
         asteroids[i].motion = step(asteroids[i].motion, delta, 1.1);
     }
+}
+
+bool collideWithAsteroid(Point p, Asteroid ast) {
+    return calcDistance(p, ast.motion.at) < ast.radius;
+}
+
+const Asteroid* findNearestAsteroid(Point from) {
+	const Asteroid* nearest = nullptr;
+	double maxDistance = 1e308;
+	for (size_t i = 0; i < asteroids.size(); i++) {
+		const Asteroid& a = asteroids[i];
+		double d = calcDistance(from, a.motion.at);
+		if (d < maxDistance) {
+			nearest = &a;
+			maxDistance = d;
+		}
+	}
+	return nearest;
 }

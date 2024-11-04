@@ -10,11 +10,11 @@ int windowNumber;
 int lastUpdateTime = 0;
 void kill();
 void drawPlayer();
-void drawBullets();
+void drawProjectiles();
 void drawAsteroids();
 void drawDusts();
 void updatePlayer(int);
-void updateBullets(int);
+void updateProjectiles(int);
 void updateAsteroids(int);
 void updateDusts(int);
 void initPlayer();
@@ -23,8 +23,7 @@ void onKeyUp(unsigned char, int, int);
 void onSpecialKeyPressed(int, int, int);
 void onSpecialKeyUp(int, int, int);
 bool testPlayerCollision(Asteroid);
-std::vector<size_t> testBulletsHit(Asteroid);
-void destroyBullet(size_t);
+int destroyHitProjectiles(Asteroid);
 void destroyAsteroid(size_t);
 void setupShaders();
 
@@ -45,27 +44,28 @@ void displayScore(){
     }
 }
 
+int annihilateAsteroids() {
+	std::vector<size_t> asteroidsToDestroy;
+    for (size_t i = 0; i < asteroids.size(); i++) {
+        if (testPlayerCollision(asteroids[i])) {
+            kill();
+            return 0;
+        }
+        int hits = destroyHitProjectiles(asteroids[i]);
+        if (hits > 0) asteroidsToDestroy.push_back(i);
+    }
+    for (auto id: asteroidsToDestroy) destroyAsteroid(id);
+    return asteroidsToDestroy.size();
+}
+
 void onUpdate() {
     int time = glutGet(GLUT_ELAPSED_TIME);
     int delta = time - lastUpdateTime;
     updatePlayer(delta);
-    updateBullets(delta);
+    updateProjectiles(delta);
     updateAsteroids(delta);
     updateDusts(delta);
-    std::vector<size_t> asteroidsToDestroy;
-    for (size_t i = 0; i < asteroids.size(); i++) {
-        if (testPlayerCollision(asteroids[i])) {
-            kill();
-            break;
-        }
-        std::vector<size_t> hitBullets = testBulletsHit(asteroids[i]);
-        for (auto bulletId: hitBullets) destroyBullet(bulletId);
-        if (hitBullets.size() > 0) {
-            asteroidsToDestroy.push_back(i);
-        }
-    }
-    for (auto id: asteroidsToDestroy) destroyAsteroid(id);
-    score += asteroidsToDestroy.size();
+    score += annihilateAsteroids();
     lastUpdateTime = time;
     glutPostWindowRedisplay(windowNumber);
 }
@@ -90,7 +90,7 @@ void onDisplay(){
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     drawGrid();
     drawPlayer();
-    drawBullets();
+    drawProjectiles();
     drawAsteroids();
     drawDusts();
 
@@ -157,22 +157,3 @@ int main(int argc, char** argv){
     return 0;
 }
 
-double wrapAxis(double x, double lowerBound, double upperBound) {
-    if (x < lowerBound) {
-        return x + upperBound - lowerBound;
-    }
-    else if (x > upperBound) {
-        return x - upperBound + lowerBound;
-    }
-    return x;
-}
-
-Motion step(Motion last, double delta, double screenWrap) {
-    double upperBound = ORTHO_MAX * screenWrap;
-    double lowerBound = -(screenWrap - 1) * ORTHO_MAX;
-    Motion next = last;
-    next.x = wrapAxis(last.x + last.xv * delta, lowerBound, upperBound);
-    next.y = wrapAxis(last.y + last.yv * delta, lowerBound, upperBound);
-    next.angle += last.angularVelocity * delta;
-    return next;
-}
