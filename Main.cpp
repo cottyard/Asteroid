@@ -27,12 +27,25 @@ int destroyHitProjectiles(Asteroid);
 void destroyAsteroid(size_t);
 void setupShaders();
 
-extern std::vector<Asteroid> asteroids;
 extern GLuint glowShaderProgram;
-extern GLuint shockShaderProgram;
-GLuint framebuffer, textureColorbuffer;
-int score = 0;
+extern GLuint rippleShaderProgram;
+GLuint frameBuffer1, textureBuffer1;
+GLuint frameBuffer2, textureBuffer2;
+GLuint activeFrameBuffer, activeTextureBuffer, lastRenderedTextureBuffer;
 
+void swapFrameBuffer() {
+	if (activeFrameBuffer == frameBuffer1) {
+		activeFrameBuffer = frameBuffer2;
+		activeTextureBuffer = textureBuffer2;
+		lastRenderedTextureBuffer = textureBuffer1;
+	} else {
+		activeFrameBuffer = frameBuffer1;
+		activeTextureBuffer = textureBuffer1;
+		lastRenderedTextureBuffer = textureBuffer2;
+	}
+}
+
+int score = 0;
 void displayScore(){
     glColor3f(0.0, 1.0, 1.0);
     glRasterPos2i(1, ORTHO_MAX - 3);
@@ -45,6 +58,7 @@ void displayScore(){
     }
 }
 
+extern std::vector<Asteroid> asteroids;
 int annihilateAsteroids() {
 	std::vector<size_t> asteroidsToDestroy;
     for (size_t i = 0; i < asteroids.size(); i++) {
@@ -85,57 +99,74 @@ void drawGrid() {
     }
     glEnd();
 }
-
+#include <iostream>
+extern std::vector<Ripple> ripples;
 void onDisplay(){
-	static float time = 0.0f;
-	time += 0.001f;
-	
-	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glBindFramebuffer(GL_FRAMEBUFFER, activeFrameBuffer);
+    glClear(GL_COLOR_BUFFER_BIT);
     drawGrid();
     drawPlayer();
     drawProjectiles();
     drawAsteroids();
     drawDusts();
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);    
+    
+    swapFrameBuffer();
+    
+    glBindFramebuffer(GL_FRAMEBUFFER, activeFrameBuffer);
     glClear(GL_COLOR_BUFFER_BIT);
-//    glUseProgram(glowShaderProgram);
-//    glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
-//    glBegin(GL_QUADS);
-//	    glTexCoord2f(0.0f, 0.0f); glVertex2f(-1.0f, -1.0f);
-//	    glTexCoord2f(1.0f, 0.0f); glVertex2f(1.0f, -1.0f);
-//	    glTexCoord2f(1.0f, 1.0f); glVertex2f(1.0f, 1.0f);
-//	    glTexCoord2f(0.0f, 1.0f); glVertex2f(-1.0f, 1.0f);
-//    glEnd();
-    glUseProgram(shockShaderProgram);
-    glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
-    GLint centerLocation = glGetUniformLocation(shockShaderProgram, "center");
-	GLint timeLocation = glGetUniformLocation(shockShaderProgram, "time"); 
-	glUniform2f(centerLocation, 0.5f, 0.5f);
-	glUniform1f(timeLocation, time);
+    glUseProgram(glowShaderProgram);
+    glBindTexture(GL_TEXTURE_2D, lastRenderedTextureBuffer);
     glBegin(GL_QUADS);
 	    glTexCoord2f(0.0f, 0.0f); glVertex2f(-1.0f, -1.0f);
 	    glTexCoord2f(1.0f, 0.0f); glVertex2f(1.0f, -1.0f);
 	    glTexCoord2f(1.0f, 1.0f); glVertex2f(1.0f, 1.0f);
 	    glTexCoord2f(0.0f, 1.0f); glVertex2f(-1.0f, 1.0f);
     glEnd();
+    
+    for (const auto& ripple: ripples) {
+    	swapFrameBuffer();
+    	
+	    glBindFramebuffer(GL_FRAMEBUFFER, activeFrameBuffer);
+	    glClear(GL_COLOR_BUFFER_BIT);
+	    glUseProgram(rippleShaderProgram);
+	    glBindTexture(GL_TEXTURE_2D, lastRenderedTextureBuffer);
+	    std::cout << ripples[0].at.x << " " << ripples[0].at.y << std::endl;
+		glUniform2f(glGetUniformLocation(rippleShaderProgram, "center"), ripple.at.x / ORTHO_MAX, ripple.at.y / ORTHO_MAX);
+		glUniform1f(glGetUniformLocation(rippleShaderProgram, "progress"), ripple.progress);
+	    glBegin(GL_QUADS);
+		    glTexCoord2f(0.0f, 0.0f); glVertex2f(-1.0f, -1.0f);
+		    glTexCoord2f(1.0f, 0.0f); glVertex2f(1.0f, -1.0f);
+		    glTexCoord2f(1.0f, 1.0f); glVertex2f(1.0f, 1.0f);
+		    glTexCoord2f(0.0f, 1.0f); glVertex2f(-1.0f, 1.0f);
+	    glEnd();	
+	}
+    
     glUseProgram(0);
+    
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, activeFrameBuffer);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	GLint width, height;
+	glBindTexture(GL_TEXTURE_2D, activeTextureBuffer);
+	glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
+	glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
+	glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
     displayScore();
     glutSwapBuffers();
 }
 
-void initFramebuffer() {
-    glGenFramebuffers(1, &framebuffer);
-    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-    glGenTextures(1, &textureColorbuffer);
-    glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
+void initFramebuffer(GLuint& frameBuffer, GLuint& textureBuffer) {
+    glGenFramebuffers(1, &frameBuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+    glGenTextures(1, &textureBuffer);
+    glBindTexture(GL_TEXTURE_2D, textureBuffer);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, windowSize, windowSize, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureBuffer, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    activeFrameBuffer = frameBuffer;
 }
 
 int main(int argc, char** argv){
@@ -157,7 +188,8 @@ int main(int argc, char** argv){
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
     glewInit();
-    initFramebuffer();
+    initFramebuffer(frameBuffer1, textureBuffer1);
+    initFramebuffer(frameBuffer2, textureBuffer2);
     setupShaders();
     
     glutIgnoreKeyRepeat(1);

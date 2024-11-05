@@ -27,6 +27,12 @@ struct Asteroid {
     std::vector<Point> vertices;
 };
 
+struct Ripple {
+	Ripple(Point at): at(at) { progress = 0; }
+	Point at;
+	float progress;
+};
+
 double velocity(Motion m);
 double bearing(Motion m);
 double angleTo(Point from, Point to);

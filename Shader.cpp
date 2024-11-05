@@ -4,7 +4,7 @@
 #include "GL/glew.h"
 
 GLuint glowShaderProgram;
-GLuint shockShaderProgram;
+GLuint rippleShaderProgram;
 
 char* readFileAsCharArray(const std::string& filename) {
     std::ifstream file(filename, std::ios::binary | std::ios::ate);
@@ -42,24 +42,24 @@ GLuint compileShader(GLenum type, const char* source) {
 void setupShaders() {
 	char* vertexSource = readFileAsCharArray("shaders/vertex");
 	char* glowSource = readFileAsCharArray("shaders/glow");
-	char* shockSource = readFileAsCharArray("shaders/shock");
+	char* rippleSource = readFileAsCharArray("shaders/ripple");
 	
     GLuint vertexShader =  compileShader(GL_VERTEX_SHADER, vertexSource);
     GLuint glowShader = compileShader(GL_FRAGMENT_SHADER, glowSource);
-    GLuint shockShader = compileShader(GL_FRAGMENT_SHADER, shockSource);
+    GLuint rippleShader = compileShader(GL_FRAGMENT_SHADER, rippleSource);
 
     glowShaderProgram = glCreateProgram();
     glAttachShader(glowShaderProgram, vertexShader);
     glAttachShader(glowShaderProgram, glowShader);
     glLinkProgram(glowShaderProgram);
 
-	shockShaderProgram = glCreateProgram();
-    glAttachShader(shockShaderProgram, vertexShader);
-    glAttachShader(shockShaderProgram, shockShader);
-    glLinkProgram(shockShaderProgram);
+	rippleShaderProgram = glCreateProgram();
+    glAttachShader(rippleShaderProgram, vertexShader);
+    glAttachShader(rippleShaderProgram, rippleShader);
+    glLinkProgram(rippleShaderProgram);
 
     glDeleteShader(vertexShader);
     glDeleteShader(glowShader);
-    glDeleteShader(shockShader);
+    glDeleteShader(rippleShader);
 }
 

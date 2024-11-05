@@ -1,0 +1,15 @@
+#version 330 core
+out vec4 FragColor;
+in vec2 TexCoords;
+uniform sampler2D screenTexture;
+uniform vec2 center;
+uniform float progress;
+void main() {
+    float waveFrequency = 50.2655;
+    float damping = 3 + progress * progress * 30;
+    float radius = progress * 0.5;
+    float dist = distance(center, TexCoords);
+    float waveEffect = sin((dist - radius) * waveFrequency) * exp(-dist * damping);
+    vec2 rippleCoords = TexCoords + normalize(TexCoords - center) * waveEffect * 0.01;
+    FragColor = texture(screenTexture, rippleCoords);
+}

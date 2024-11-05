@@ -22,6 +22,7 @@ struct Missile {
 
 std::vector<Motion> bullets;
 std::vector<Missile> missiles;
+std::vector<Ripple> ripples;
 
 Motion initProjectile(Motion player, double velocityBoost) {
     Motion p{};
@@ -49,9 +50,14 @@ void newMissile(Motion player) {
 	));
 }
 
+void newRipple(Point at) {
+	ripples.push_back(Ripple(at));
+}
+
 void drawBullet(Motion b) {
 	glPushMatrix();
 	glTranslatef(b.at.x, b.at.y, 0.0);
+	glColor3f(0.8,0.2,0.5);
 	glBegin(GL_LINE_LOOP);
 		for(int i=0;i<10;i++){
 			glVertex2f(bulletSize * cos(2*PI*i/10),
@@ -84,10 +90,23 @@ void drawMissile(Missile missile) {
 	glPopMatrix();
 }
 
+void drawRipple(Ripple r) {
+	glPushMatrix();
+	glTranslatef(r.at.x, r.at.y, 0.0);
+	glColor4f(1.0, 0.1, 1.0, (GLfloat)(0.5 - 0.5 * r.progress));
+	glBegin(GL_LINE_LOOP);
+		for(int i=0;i<36;i++){
+			glVertex2f(r.progress * 10 * cos(2*PI*i/36),
+					   r.progress * 10 * sin(2*PI*i/36));
+		}
+	glEnd();
+	glPopMatrix();
+}
+
 void drawProjectiles() {
-	glColor3f(0.8,0.2,0.5);
-    for (size_t i = 0; i < bullets.size(); i++) drawBullet(bullets[i]);
-    for (size_t i = 0; i < missiles.size(); i++) drawMissile(missiles[i]);
+    for (const auto& b: bullets) drawBullet(b);
+    for (const auto& m: missiles) drawMissile(m);
+    for (const auto& r: ripples) drawRipple(r);
 }
 
 bool inBoundary(int x) {
@@ -139,6 +158,14 @@ void updateProjectiles(int delta) {
 		}
         missiles[i].motion = step(m, delta);
     }
+    for (int i = ripples.size() - 1; i >= 0; i--) {
+        if (ripples[i].progress <= 1) {
+            ripples[i].progress += delta / 1000.0;
+        }
+        else {
+            ripples.erase(ripples.begin() + i);
+        }
+    }
 }
 
 int destroyHitProjectiles(Asteroid ast) {
@@ -151,6 +178,7 @@ int destroyHitProjectiles(Asteroid ast) {
     }
     for (int i = missiles.size() - 1; i >= 0; i--) {
         if (collideWithAsteroid(missiles[i].motion.at, ast)) {
+        	newRipple(missiles[i].motion.at);
         	missiles.erase(missiles.begin() + i);
             hits++;
         }

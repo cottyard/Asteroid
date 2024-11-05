@@ -5,7 +5,7 @@
 #include "GL/freeglut.h"
 
 const int dustFadingTime = 1500;
-const int spawnCooldown = 20000;
+const int spawnCooldown = 2000;
 int spawnTimer = spawnCooldown;
 
 struct Dust {
