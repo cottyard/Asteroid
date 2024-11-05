@@ -38,7 +38,8 @@ double bearing(Motion m);
 double angleTo(Point from, Point to);
 double calcDistance(Point a, Point b);
 double modulate(double angle);
-
 Motion accelerate(Motion motion, double acceleration);
 Motion step(Motion last, double delta, double screenWrap = 1.0);
+
+bool collideWithAsteroid(Point p, Asteroid ast, double radius = 1);
 

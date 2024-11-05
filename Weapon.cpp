@@ -3,13 +3,13 @@
 #define GLUT_DISABLE_ATEXIT_HACK
 #include "GL/freeglut.h"
 
-bool collideWithAsteroid(Point, Asteroid);
 const Asteroid* findNearestAsteroid(Point);
 
 const double bulletSize = 0.3;
 const double missileTurnRate = 0.3;
 const double missileFule = 0.5;
 const double missileVelocityCap = 0.05;
+const double rippleRadius = 10;
 
 struct Missile {
 	Missile(double fuel, Point target, Motion motion):
@@ -96,8 +96,8 @@ void drawRipple(Ripple r) {
 	glColor4f(1.0, 0.1, 1.0, (GLfloat)(0.5 - 0.5 * r.progress));
 	glBegin(GL_LINE_LOOP);
 		for(int i=0;i<36;i++){
-			glVertex2f(r.progress * 10 * cos(2*PI*i/36),
-					   r.progress * 10 * sin(2*PI*i/36));
+			glVertex2f(r.progress * rippleRadius * cos(2*PI*i/36),
+					   r.progress * rippleRadius * sin(2*PI*i/36));
 		}
 	glEnd();
 	glPopMatrix();
@@ -182,6 +182,9 @@ int destroyHitProjectiles(Asteroid ast) {
         	missiles.erase(missiles.begin() + i);
             hits++;
         }
+    }
+    for (const auto& ripple: ripples) {
+    	if (collideWithAsteroid(ripple.at, ast, ripple.progress * rippleRadius)) hits++;
     }
     return hits;
 }

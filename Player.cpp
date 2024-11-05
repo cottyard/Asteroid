@@ -5,7 +5,6 @@
 
 void newBullet(Motion);
 void newMissile(Motion);
-bool collideWithAsteroid(Point p, Asteroid ast);
 
 const int shootCooldown = 180;
 const int launchCooldown = 720;

@@ -148,8 +148,8 @@ void updateAsteroids(int delta){
     }
 }
 
-bool collideWithAsteroid(Point p, Asteroid ast) {
-    return calcDistance(p, ast.motion.at) < ast.radius;
+bool collideWithAsteroid(Point p, Asteroid ast, double radius) {
+    return calcDistance(p, ast.motion.at) < ast.radius + radius;
 }
 
 const Asteroid* findNearestAsteroid(Point from) {
