@@ -8,14 +8,15 @@ void newMissile(Motion);
 bool collideWithAsteroid(Point p, Asteroid ast);
 
 const int shootCooldown = 180;
+const int launchCooldown = 720;
 Point playerFront(1.5, 0);
 Point playerRearLeft(-1.0, -1.1);
 Point playerRearRight(-1.0, 1.1);
-
 int shootTimer = 0;
-
+int launchTimer = 0;
 bool alive;
 bool shooting;
+bool launching;
 bool turning_left;
 bool turning_right;
 bool thrusting;
@@ -35,6 +36,7 @@ void initPlayer(){
     turning_right = 0;
     thrusting = 0;
     shooting = false;
+    launching = false;
     alive = true;
 }
 
@@ -71,10 +73,16 @@ void updatePlayer(int delta){
     if (thrusting) motion = accelerate(motion, delta * 0.00003);
     
     if (shooting && shootTimer >= shootCooldown) {
-        newMissile(motion);
+    	newBullet(motion);
         shootTimer = 0;
     }
+    if (launching && launchTimer >= launchCooldown) {
+    	newMissile(motion);
+    	launchTimer = 0;
+    	launching = false;
+	}
     shootTimer += delta;
+    launchTimer += delta;
     motion = step(motion, delta);
 }
 
@@ -94,7 +102,7 @@ void onKeyPressed(unsigned char key, int px, int py) {
     case ' ':
         if (alive) shooting = true;
         else initPlayer();
-        break;        
+        break;
     }
 }
 
@@ -107,7 +115,8 @@ void onKeyUp(unsigned char key, int px, int py) {
 }
 
 void onSpecialKeyPressed(int key, int x, int y){
-    int time = glutGet(GLUT_ELAPSED_TIME);
+	int modifiers = glutGetModifiers();
+	launching = modifiers & GLUT_ACTIVE_CTRL;
     switch (key){
     case GLUT_KEY_UP:
         thrusting = true;

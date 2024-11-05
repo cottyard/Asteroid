@@ -36,7 +36,6 @@ Asteroid createAsteroid(int vertexCount, Point at, double radius){
     double speed = (rand() % 30 + 100) / 10000.0;
     a.motion.v = Point(speed * cos(direction * PI / 180),
 					   speed * sin(direction * PI / 180));
-
     int angle = 0;
     for (int i = 0; i < vertexCount; i++) {
         a.vertices.push_back(Point(
@@ -65,7 +64,6 @@ Dust createDust(Point at) {
 void destroyAsteroid(size_t i) {
     Asteroid ast = asteroids[i];
     asteroids.erase(asteroids.begin() + i);
-
     int dustCountMin = (int)ast.radius * 2 + 1;
     int dustCount = rand() % dustCountMin + dustCountMin;
     for (int i = 0; i < dustCount; i++) {
@@ -136,7 +134,7 @@ void drawAsteroid(const Asteroid& asteroid) {
 }
 
 void drawAsteroids() {
-    for (const auto& ast : asteroids) drawAsteroid(ast);
+    for (const auto& ast: asteroids) drawAsteroid(ast);
 }
 
 void updateAsteroids(int delta){
