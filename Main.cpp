@@ -32,6 +32,9 @@ extern GLuint rippleShaderProgram;
 GLuint frameBuffer1, textureBuffer1;
 GLuint frameBuffer2, textureBuffer2;
 GLuint activeFrameBuffer, activeTextureBuffer, lastRenderedTextureBuffer;
+GLdouble modelview[16];
+GLdouble projection[16];
+GLint viewport[4];
 
 void swapFrameBuffer() {
 	if (activeFrameBuffer == frameBuffer1) {
@@ -99,7 +102,7 @@ void drawGrid() {
     }
     glEnd();
 }
-#include <iostream>
+
 extern std::vector<Ripple> ripples;
 void onDisplay(){
 	glBindFramebuffer(GL_FRAMEBUFFER, activeFrameBuffer);
@@ -117,12 +120,13 @@ void onDisplay(){
     glUseProgram(glowShaderProgram);
     glBindTexture(GL_TEXTURE_2D, lastRenderedTextureBuffer);
     glBegin(GL_QUADS);
-	    glTexCoord2f(0.0f, 0.0f); glVertex2f(-1.0f, -1.0f);
-	    glTexCoord2f(1.0f, 0.0f); glVertex2f(1.0f, -1.0f);
-	    glTexCoord2f(1.0f, 1.0f); glVertex2f(1.0f, 1.0f);
-	    glTexCoord2f(0.0f, 1.0f); glVertex2f(-1.0f, 1.0f);
+	    glVertex2f(-1.0f, -1.0f);
+		glVertex2f(1.0f, -1.0f);
+		glVertex2f(1.0f, 1.0f);
+		glVertex2f(-1.0f, 1.0f);
     glEnd();
     
+	GLdouble winX, winY, winZ;
     for (const auto& ripple: ripples) {
     	swapFrameBuffer();
     	
@@ -130,14 +134,15 @@ void onDisplay(){
 	    glClear(GL_COLOR_BUFFER_BIT);
 	    glUseProgram(rippleShaderProgram);
 	    glBindTexture(GL_TEXTURE_2D, lastRenderedTextureBuffer);
-	    std::cout << ripples[0].at.x << " " << ripples[0].at.y << std::endl;
-		glUniform2f(glGetUniformLocation(rippleShaderProgram, "center"), ripple.at.x / ORTHO_MAX, ripple.at.y / ORTHO_MAX);
+	    
+	    gluProject(ripple.at.x, ripple.at.y, 0, modelview, projection, viewport, &winX, &winY, &winZ);
+		glUniform2f(glGetUniformLocation(rippleShaderProgram, "center"), winX / windowSize, winY / windowSize);
 		glUniform1f(glGetUniformLocation(rippleShaderProgram, "progress"), ripple.progress);
 	    glBegin(GL_QUADS);
-		    glTexCoord2f(0.0f, 0.0f); glVertex2f(-1.0f, -1.0f);
-		    glTexCoord2f(1.0f, 0.0f); glVertex2f(1.0f, -1.0f);
-		    glTexCoord2f(1.0f, 1.0f); glVertex2f(1.0f, 1.0f);
-		    glTexCoord2f(0.0f, 1.0f); glVertex2f(-1.0f, 1.0f);
+			glVertex2f(-1.0f, -1.0f);
+			glVertex2f(1.0f, -1.0f);
+			glVertex2f(1.0f, 1.0f);
+			glVertex2f(-1.0f, 1.0f);
 	    glEnd();	
 	}
     
@@ -183,7 +188,10 @@ int main(int argc, char** argv){
 	gluLookAt(ORTHO_MAX / 2, 0, ORTHO_MAX, 
 	          ORTHO_MAX / 2, ORTHO_MAX / 2, 0, 
 	          0, 1, 0);
-
+	glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
+	glGetDoublev(GL_PROJECTION_MATRIX, projection);
+	glGetIntegerv(GL_VIEWPORT, viewport);
+	
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
