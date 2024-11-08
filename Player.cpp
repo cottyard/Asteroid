@@ -78,7 +78,6 @@ void updatePlayer(int delta){
     if (launching && launchTimer >= launchCooldown) {
     	newMissile(motion);
     	launchTimer = 0;
-    	launching = false;
 	}
     shootTimer += delta;
     launchTimer += delta;
@@ -130,6 +129,8 @@ void onSpecialKeyPressed(int key, int x, int y){
 }
 
 void onSpecialKeyUp(int key, int x, int y){
+	int modifiers = glutGetModifiers();
+	launching = modifiers & GLUT_ACTIVE_CTRL;
     switch (key){
     case GLUT_KEY_UP:
         thrusting = false;
