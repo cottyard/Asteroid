@@ -103,6 +103,25 @@ void drawGrid() {
     glEnd();
 }
 
+void view_2d() {
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(0, ORTHO_MAX, 0, ORTHO_MAX, -1.0, 1.0);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+}
+
+void view_3d() {
+	glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+	gluPerspective(60.0, 1.0, 1.0, 1000.0);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	gluLookAt(ORTHO_MAX / 2, 0, ORTHO_MAX, 
+	          ORTHO_MAX / 2, ORTHO_MAX / 2, 0, 
+	          0, 1, 0);
+}
+
 extern std::vector<Ripple> ripples;
 void onDisplay(){
 	glBindFramebuffer(GL_FRAMEBUFFER, activeFrameBuffer);
@@ -155,9 +174,11 @@ void onDisplay(){
 	glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
 	glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
 	glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    
+	
+    view_2d();
     displayScore();
+    view_3d();
+    
     glutSwapBuffers();
 }
 
@@ -179,15 +200,8 @@ int main(int argc, char** argv){
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
     glutInitWindowSize(windowSize, windowSize);
     windowNumber = glutCreateWindow("Asteroids Example for C++ Beginners");
-	// 2D
-	//glOrtho(0, ORTHO_MAX, 0, ORTHO_MAX, -1.0, 1.0);
-	// 3D
-    glMatrixMode(GL_PROJECTION);
-	gluPerspective(60.0, 1.0, 1.0, 1000.0);
-	glMatrixMode(GL_MODELVIEW);
-	gluLookAt(ORTHO_MAX / 2, 0, ORTHO_MAX, 
-	          ORTHO_MAX / 2, ORTHO_MAX / 2, 0, 
-	          0, 1, 0);
+    
+	view_3d();
 	glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
 	glGetDoublev(GL_PROJECTION_MATRIX, projection);
 	glGetIntegerv(GL_VIEWPORT, viewport);
