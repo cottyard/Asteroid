@@ -1,21 +1,35 @@
 #include <cstdlib>
 #include <math.h>
-#include "Common.h"
 #define GLUT_DISABLE_ATEXIT_HACK
-#include "glut.h"
+#include "GL/freeglut.h"
+#include "Common.h"
 
-const int dustFadingTime = 1500;
-const int spawnCooldown = 2000;
-int spawnTimer = 0;
+Motion initBullet(Motion player) {
+    Motion bullet{};
+    float dx = cos(player.angle * PI / 180.0);
+    float dy = sin(player.angle * PI / 180.0);
+    bullet.x = player.x + 2 * dx;
+    bullet.y = player.y + 2 * dy;
+    bullet.xv = player.xv + dx * 0.04;
+    bullet.yv = player.yv + dy * 0.04;
+    bullet.angle = player.angle;
+    return bullet;
+}
 
-struct Dust {
-    double color[3];
-    Motion motion;
-    int timeExisted;
-};
-
-std::vector<Asteroid> asteroids;
-std::vector<Dust> dusts;
+World initWorld(){
+	World w{};
+    w.player.x = ORTHO_MAX / 2;
+	w.player.y = ORTHO_MAX / 2;
+	w.player.xv = 0;
+	w.player.yv = 0;
+	w.player.angle = 90;
+	w.turning_left = 0;
+	w.turning_right = 0;
+	w.thrusting = 0;
+	w.shooting = false;
+	w.alive = true;
+	return w;
+}
 
 Point randomSpawnPoint() {
     int x, y;
@@ -26,7 +40,7 @@ Point randomSpawnPoint() {
     else return Point(y, x);
 }
 
-Asteroid createAsteroid(int vertexCount, Point at, double radius){
+Asteroid createAsteroid(Point at, double radius){
     Asteroid a;
     a.radius = radius;
     a.motion.x = at.x;
@@ -37,117 +51,116 @@ Asteroid createAsteroid(int vertexCount, Point at, double radius){
     double speed = (rand() % 30 + 100) / 10000.0;
     a.motion.xv = speed * cos(direction * PI / 180);
     a.motion.yv = speed * sin(direction * PI / 180);
-
-    int angle = 0;
-    for (int i = 0; i < vertexCount; i++) {
-        a.vertices.push_back(Point(
-            a.radius * cos(angle * PI / 180),
-            a.radius * sin(angle * PI / 180)));
-        angle += (360 / vertexCount + (rand() % 21 - 10));
-    }
     return a;
 }
 
-Dust createDust(Motion at) {
-    Dust d{};
-    d.color[0] = (double)rand() / RAND_MAX;
-    d.color[1] = (double)rand() / RAND_MAX;
-    d.color[2] = (double)rand() / RAND_MAX;
-    Motion m{};
-    m.x = at.x;
-    m.y = at.y;
-    int direction = rand() % 360;
-    double speed = (rand() % 100 + 100) / 10000.0;
-    m.xv = speed * cos(direction * PI / 180);
-    m.yv = speed * sin(direction * PI / 180);
-    d.motion = m;
-    return d;
-}
-
-void destroyAsteroid(size_t i) {
-    Asteroid ast = asteroids[i];
-    asteroids.erase(asteroids.begin() + i);
-
-    int dustCountMin = (int)ast.radius * 2 + 1;
-    int dustCount = rand() % dustCountMin + dustCountMin;
-    for (int i = 0; i < dustCount; i++) {
-        dusts.push_back(createDust(ast.motion));
-    }
-    int vertexCount = ast.vertices.size();
-    Point p = Point(ast.motion.x, ast.motion.y);
-    double r = ast.radius / 2;
-    if (vertexCount == 7) {
-        asteroids.push_back(createAsteroid(4, p, r));
-        asteroids.push_back(createAsteroid(5, p, r));
-    }
-    else if (vertexCount == 6) {
-        for (int i = 0; i < 2; i++) {
-            asteroids.push_back(createAsteroid(4, p, r));
-        }
-    }
-    else if (vertexCount == 5) {
-        for (int i = 0; i < 3; i++) {
-            asteroids.push_back(createAsteroid(3, p, r));
-        }
-    }
-    else if (vertexCount == 4) {
-        for (int i = 0; i < 2; i++) {
-            asteroids.push_back(createAsteroid(3, p, r));
-        }
-    }
-}
- 
 Asteroid spawnAsteroid() {
-    return createAsteroid(rand() % 4 + 4, randomSpawnPoint(), rand() % 3 + 3);
+    return createAsteroid(randomSpawnPoint(), rand() % 3 + 3);
 }
 
-void drawDust(Dust dust) {
-    glPointSize(2.2);
-    glBegin(GL_POINTS);
-    glColor4f(dust.color[0], dust.color[1], dust.color[2], 2 - 2 * ((GLfloat)dust.timeExisted / dustFadingTime));
-    glVertex2f(dust.motion.x, dust.motion.y);
-    glEnd();
+bool inBoundary(int x) {
+    return x >= 0 && x <= ORTHO_MAX;
 }
 
-void drawDusts() {
-    for (auto& ds: dusts) drawDust(ds);
+double calcDistance(Point a, Point b) {
+    return sqrt(pow(abs(a.x - b.x), 2) + pow(abs(a.y - b.y), 2));
 }
 
-void updateDusts(int delta) {
-    for (int i = dusts.size() - 1; i >= 0; i--) {
-        if (dusts[i].timeExisted >= dustFadingTime) {
-            dusts.erase(dusts.begin() + i);
+bool collideWith(Point p, Asteroid ast) {
+    return calcDistance(p, Point(ast.motion.x, ast.motion.y)) < ast.radius;
+}
+
+std::vector<size_t> testBulletsHit(const std::vector<Motion>& bullets, Asteroid ast) {
+    std::vector<size_t> hitBullets;
+    for (size_t i = 0; i < bullets.size(); ++i) {
+        if (collideWith(Point(bullets[i].x, bullets[i].y), ast)) {
+            hitBullets.push_back(i);
+        }
+    }
+    return hitBullets;
+}
+
+double wrapAxis(double x, double lowerBound, double upperBound) {
+    if (x < lowerBound) {
+        return x + upperBound - lowerBound;
+    }
+    else if (x > upperBound) {
+        return x - upperBound + lowerBound;
+    }
+    return x;
+}
+
+Motion stepMotion(Motion last, double delta, double screenWrap  = 1.0) {
+    double upperBound = ORTHO_MAX * screenWrap;
+    double lowerBound = -(screenWrap - 1) * ORTHO_MAX;
+    Motion next = last;
+    next.x = wrapAxis(last.x + last.xv * delta, lowerBound, upperBound);
+    next.y = wrapAxis(last.y + last.yv * delta, lowerBound, upperBound);
+    next.angle += last.angularVelocity * delta;
+    return next;
+}
+
+void stepWorld(World& world, int delta) {
+    if (world.turning_left){
+        world.player.angle = world.player.angle + delta * 0.3;
+    }
+    if (world.turning_right){
+        world.player.angle = world.player.angle - delta * 0.3;
+    }
+    if (world.thrusting){
+        double acceleration = delta * 0.00003;
+        world.player.xv = world.player.xv + cos(world.player.angle*PI/180.0) * acceleration;
+        world.player.yv = world.player.yv + sin(world.player.angle*PI/180.0) * acceleration;
+    }
+    if (world.shooting && world.shootTimer >= shootCooldown) {
+        world.bullets.push_back(initBullet(world.player));
+        world.shootTimer = 0;
+    }
+    world.shootTimer += delta;
+    world.player = stepMotion(world.player, delta);
+    
+    for (int i = world.bullets.size() - 1; i >= 0; i--) {
+        if (inBoundary(world.bullets[i].x) && inBoundary(world.bullets[i].y)) {
+            world.bullets[i] = stepMotion(world.bullets[i], delta, 1.2);
         }
         else {
-            dusts[i].motion = step(dusts[i].motion, delta, 1.1);
-            dusts[i].timeExisted += delta;
+            world.bullets.erase(world.bullets.begin() + i);
         }
     }
-}
-
-void drawAsteroid(Asteroid& asteroid) {
-    glPushMatrix();
-    glTranslatef(asteroid.motion.x, asteroid.motion.y, 0.0);
-    glRotatef(asteroid.motion.angle, 0.0, 0.0, 1.0);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    glColor3f(0.9, 0.9, 0.9);
-    glBegin(GL_POLYGON);
-    for (auto& v : asteroid.vertices) glVertex2f(v.x, v.y);
-    glEnd();
-    glPopMatrix();
-}
-
-void drawAsteroids() {
-    for (auto& ast : asteroids) drawAsteroid(ast);
-}
-
-void updateAsteroids(int delta){
-    spawnTimer += delta;
-    if (spawnTimer >= spawnCooldown) {
-        spawnTimer = 0;
-        asteroids.push_back(spawnAsteroid());
+    
+    world.spawnTimer += delta;
+    if (world.spawnTimer >= spawnCooldown) {
+        world.spawnTimer = 0;
+        world.asteroids.push_back(spawnAsteroid());
     }
-    for (size_t i = 0; i < asteroids.size(); i++) {
-        asteroids[i].motion = step(asteroids[i].motion, delta, 1.1);
+    for (size_t i = 0; i < world.asteroids.size(); i++) {
+        world.asteroids[i].motion = stepMotion(world.asteroids[i].motion, delta, 1.1);
     }
+    
+    std::vector<size_t> asteroidsToDestroy;
+    for (size_t i = 0; i < world.asteroids.size(); i++) {
+        if (world.alive && collideWith(Point(world.player.x, world.player.y), world.asteroids[i])) {
+            world.alive = false;
+            break;
+        }
+        std::vector<size_t> hitBullets = testBulletsHit(world.bullets, world.asteroids[i]);
+        for (auto bulletId: hitBullets) world.bullets.erase(world.bullets.begin() + bulletId);
+        if (hitBullets.size() > 0) {
+            asteroidsToDestroy.push_back(i);
+        }
+    }
+    
+    for (auto id: asteroidsToDestroy) {
+	    Asteroid ast = world.asteroids[id];
+    	world.asteroids.erase(world.asteroids.begin() + id);
+    	if (ast.radius > 2) {
+	    	for (int i = 0; i < 2; i++) {
+	            world.asteroids.push_back(
+					createAsteroid(Point(ast.motion.x, ast.motion.y), 
+								   ast.radius / 2));
+	        }	
+		}        
+	}
+	
+    world.score += asteroidsToDestroy.size();
 }
