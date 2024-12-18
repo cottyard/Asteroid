@@ -11,7 +11,7 @@ ResourceIncludes=
 MakeIncludes=
 Compiler=
 CppCompiler=
-Linker=libopengl32.a_@@_libglu32.a_@@_libglut32.a_@@_
+Linker=libopengl32.a_@@_libglu32.a_@@_libfreeglut.a_@@_
 IsCpp=1
 Icon=
 ExeOutput=
@@ -27,9 +27,9 @@ CommandLine=
 Folders=
 IncludeVersionInfo=0
 SupportXPThemes=0
-CompilerSet=3
-CompilerSettings=00000001c0000000001000000
-UnitCount=5
+CompilerSet=0
+CompilerSettings=0000000000000000000000000
+UnitCount=4
 
 [VersionInfo]
 Major=1
@@ -70,18 +70,8 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit3]
-FileName=glut.h
-CompileCpp=1
-Folder=
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
 [Unit4]
-FileName=Main.cpp
+FileName=Draw.cpp
 CompileCpp=1
 Folder=
 Compile=1
@@ -92,6 +82,16 @@ BuildCmd=
 
 [Unit5]
 FileName=Player.cpp
+CompileCpp=1
+Folder=
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit3]
+FileName=Main.cpp
 CompileCpp=1
 Folder=
 Compile=1

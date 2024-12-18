@@ -1,17 +1,17 @@
 # Project: ÏîÄ¿1
 # Makefile created by Dev-C++ 5.11
 
-CPP      = g++.exe -D__DEBUG__
-CC       = gcc.exe -D__DEBUG__
+CPP      = g++.exe
+CC       = gcc.exe
 WINDRES  = windres.exe
-OBJ      = Asteroids.o Main.o Player.o
-LINKOBJ  = Asteroids.o Main.o Player.o
-LIBS     = -L"C:/Program Files (x86)/Dev-Cpp/MinGW64/lib32" -L"C:/Program Files (x86)/Dev-Cpp/MinGW64/x86_64-w64-mingw32/lib32" -static-libgcc libopengl32.a libglu32.a libglut32.a -m32 -g3
-INCS     = -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/include" -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/x86_64-w64-mingw32/include" -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/lib/gcc/x86_64-w64-mingw32/4.9.2/include"
-CXXINCS  = -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/include" -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/x86_64-w64-mingw32/include" -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/lib/gcc/x86_64-w64-mingw32/4.9.2/include" -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/lib/gcc/x86_64-w64-mingw32/4.9.2/include/c++"
+OBJ      = Asteroids.o Main.o Draw.o
+LINKOBJ  = Asteroids.o Main.o Draw.o
+LIBS     = -static-libgcc -static-libstdc++ libopengl32.a libglu32.a libfreeglut.a
+INCS     = 
+CXXINCS  = 
 BIN      = Asteroid.exe
-CXXFLAGS = $(CXXINCS) -m32 -std=c++11 -g3 -std=c++14
-CFLAGS   = $(INCS) -m32 -std=c++11 -g3 -std=c++14
+CXXFLAGS = $(CXXINCS) -std=c++11
+CFLAGS   = $(INCS) -std=c++11
 RM       = rm.exe -f
 
 .PHONY: all all-before all-after clean clean-custom
@@ -30,5 +30,5 @@ Asteroids.o: Asteroids.cpp
 Main.o: Main.cpp
 	$(CPP) -c Main.cpp -o Main.o $(CXXFLAGS)
 
-Player.o: Player.cpp
-	$(CPP) -c Player.cpp -o Player.o $(CXXFLAGS)
+Draw.o: Draw.cpp
+	$(CPP) -c Draw.cpp -o Draw.o $(CXXFLAGS)
