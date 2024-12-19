@@ -3,7 +3,7 @@
 #include "GL/freeglut.h"
 #include "Common.h"
 
-int windowNumber;
+int windowWorld, windowNeural;
 int lastUpdateTime = 0;
 
 World world;
@@ -75,14 +75,40 @@ void onUpdate() {
     int time = glutGet(GLUT_ELAPSED_TIME);
     stepWorld(world, time - lastUpdateTime);
     lastUpdateTime = time;
-    glutPostWindowRedisplay(windowNumber);
+    glutPostWindowRedisplay(windowWorld);
 }
 
 void drawWorld(World world);
-void onDisplay(){
+void onDisplayWorld(){
     glClear(GL_COLOR_BUFFER_BIT);
     drawWorld(world);
     displayScore();
+    glutSwapBuffers();
+}
+
+#include <Eigen/Dense>
+void drawNeuralNetwork(
+    const std::vector<size_t>& config,
+    const std::vector<Eigen::MatrixXf>& weights,
+    const std::vector<float>& inputs,
+    const std::vector<float>& outputs,
+    float width, float height, bool bias
+);
+
+void onDisplayNeural() {
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    // Example network parameters
+    std::vector<size_t> config = {3, 4, 2};  // Input layer: 3, Hidden: 4, Output: 2
+    std::vector<Eigen::MatrixXf> weights = {
+        Eigen::MatrixXf::Random(4, 4),  // Random weights between input and hidden
+        Eigen::MatrixXf::Random(2, 5)   // Random weights between hidden and output
+    };
+    std::vector<float> inputs = {0.5f, 0.2f, 0.8f};
+    std::vector<float> outputs = {0.7f, 0.3f};
+
+    drawNeuralNetwork(config, weights, inputs, outputs, 800.0f, 800.0f, true);
+
     glutSwapBuffers();
 }
 
@@ -97,17 +123,25 @@ int main(int argc, char** argv)
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
     glutInitWindowSize(800, 800);
-    windowNumber = glutCreateWindow("Asteroids Example for C++ Beginners");
-    glutIgnoreKeyRepeat(1);
-    glutKeyboardFunc(&onKeyPressed);
-    glutKeyboardUpFunc(&onKeyUp);
-    glutSpecialFunc(&onSpecialKeyPressed);
-    glutSpecialUpFunc(&onSpecialKeyUp);
-    glutDisplayFunc(&onDisplay);
-    glutVisibilityFunc(&onVisibilityChange);
+    
+    glutInitWindowPosition(800, 100);
+    windowNeural = glutCreateWindow("Neural");
+    glutDisplayFunc(onDisplayNeural);
+    glOrtho(-800, 800, -800, 800, -1.0, 1.0);
+    
+    glutInitWindowPosition(0, 100);
+    windowWorld = glutCreateWindow("World");
+    glutDisplayFunc(onDisplayWorld);
     glOrtho(0, ORTHO_MAX, 0, ORTHO_MAX, -1.0, 1.0);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glutIgnoreKeyRepeat(1);
+    glutKeyboardFunc(onKeyPressed);
+    glutKeyboardUpFunc(onKeyUp);
+    glutSpecialFunc(onSpecialKeyPressed);
+    glutSpecialUpFunc(onSpecialKeyUp);
+    glutVisibilityFunc(onVisibilityChange);
+    
     glutMainLoop();
     return 0;
 }

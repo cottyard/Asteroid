@@ -4,7 +4,7 @@ Name=ÏîÄ¿1
 Type=1
 Ver=2
 ObjFiles=
-Includes=
+Includes=.
 Libs=
 PrivateResource=
 ResourceIncludes=
@@ -29,7 +29,7 @@ IncludeVersionInfo=0
 SupportXPThemes=0
 CompilerSet=0
 CompilerSettings=0000000000000000000000000
-UnitCount=4
+UnitCount=6
 
 [VersionInfo]
 Major=1
@@ -81,7 +81,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit5]
-FileName=Player.cpp
+FileName=NeuNet.cpp
 CompileCpp=1
 Folder=
 Compile=1
@@ -92,6 +92,16 @@ BuildCmd=
 
 [Unit3]
 FileName=Main.cpp
+CompileCpp=1
+Folder=
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit6]
+FileName=NeuNet.h
 CompileCpp=1
 Folder=
 Compile=1

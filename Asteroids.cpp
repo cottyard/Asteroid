@@ -101,23 +101,25 @@ Motion stepMotion(Motion last, double delta, double screenWrap  = 1.0) {
 }
 
 void stepWorld(World& world, int delta) {
-    if (world.turning_left){
-        world.player.angle = world.player.angle + delta * 0.3;
-    }
-    if (world.turning_right){
-        world.player.angle = world.player.angle - delta * 0.3;
-    }
-    if (world.thrusting){
-        double acceleration = delta * 0.00003;
-        world.player.xv = world.player.xv + cos(world.player.angle*PI/180.0) * acceleration;
-        world.player.yv = world.player.yv + sin(world.player.angle*PI/180.0) * acceleration;
-    }
-    if (world.shooting && world.shootTimer >= shootCooldown) {
-        world.bullets.push_back(initBullet(world.player));
-        world.shootTimer = 0;
-    }
-    world.shootTimer += delta;
-    world.player = stepMotion(world.player, delta);
+	if (world.alive) {
+		if (world.turning_left){
+	        world.player.angle = world.player.angle + delta * 0.3;
+	    }
+	    if (world.turning_right){
+	        world.player.angle = world.player.angle - delta * 0.3;
+	    }
+	    if (world.thrusting){
+	        double acceleration = delta * 0.00003;
+	        world.player.xv = world.player.xv + cos(world.player.angle*PI/180.0) * acceleration;
+	        world.player.yv = world.player.yv + sin(world.player.angle*PI/180.0) * acceleration;
+	    }
+	    if (world.shooting && world.shootTimer >= shootCooldown) {
+	        world.bullets.push_back(initBullet(world.player));
+	        world.shootTimer = 0;
+	    }
+	    world.shootTimer += delta;
+	    world.player = stepMotion(world.player, delta);	
+	}
     
     for (int i = world.bullets.size() - 1; i >= 0; i--) {
         if (inBoundary(world.bullets[i].x) && inBoundary(world.bullets[i].y)) {
