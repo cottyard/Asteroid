@@ -8,24 +8,23 @@
 // Forward declaration
 struct World;
 
-enum class ActivationFunc {
-    ReLU,
-    Sigmoid,
-    Tanh
-};
-
 class NeuralNetwork {
 public:
     std::vector<size_t> config;
     std::vector<Eigen::MatrixXf> weights;
-    ActivationFunc activ_func;
     float mutation_rate;
 
-    NeuralNetwork(const std::vector<size_t>& config, float mut_rate, ActivationFunc activ);
+    NeuralNetwork(const std::vector<size_t>& config, float mut_rate);
 
     static NeuralNetwork crossover(const NeuralNetwork& a, const NeuralNetwork& b);
     void mutate();
     std::vector<float> feedForward(const std::vector<float>& inputs);
+
+    // Save/Load functionality
+    void saveToFile(const std::string& filename) const;
+    static NeuralNetwork loadFromFile(const std::string& filename);
+    std::string toJson() const;
+    static NeuralNetwork fromJson(const std::string& json);
 
     void draw(float width, float height, const std::vector<float>& inputs, const std::vector<float>& outputs, bool bias) const;
 
@@ -43,8 +42,11 @@ void applyNeuralControl(World& world, const std::vector<float>& outputs);
 // Function to initialize a neural network for ship control
 void initializeNeuralNetwork();
 
-// Function to control ship using neural network
+// Function to update neural network control (called from main loop)
 void updateNeuralControl(World& world);
+
+// Function to load a neural network from file for testing
+bool loadNeuralNetworkFromFile(const std::string& filename);
 
 // Global neural network instance
 extern NeuralNetwork* g_neuralNetwork;
