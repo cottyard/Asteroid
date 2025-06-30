@@ -2,9 +2,11 @@
 #define GLUT_DISABLE_ATEXIT_HACK
 #include "GL/freeglut.h"
 #include "Common.h"
+#include "NeuNet.h"
 
 int windowWorld, windowNeural;
 int lastUpdateTime = 0;
+bool neuralControlEnabled = false; // Toggle for neural network control
 
 World world;
 World initWorld();
@@ -17,7 +19,17 @@ void onKeyPressed(unsigned char key, int px, int py) {
     case ' ':
         if (world.alive) world.control.shooting = true;
         else world = initWorld();
-        break;        
+        break;
+    case 'n': // Toggle neural network control
+    case 'N':
+        neuralControlEnabled = !neuralControlEnabled;
+        if (neuralControlEnabled) {
+            initializeNeuralNetwork();
+            printf("Neural network control enabled\n");
+        } else {
+            printf("Manual control enabled\n");
+        }
+        break;
     }
 }
 
@@ -30,31 +42,35 @@ void onKeyUp(unsigned char key, int px, int py) {
 }
 
 void onSpecialKeyPressed(int key, int x, int y){
-    int time = glutGet(GLUT_ELAPSED_TIME);
-    switch (key){
-    case GLUT_KEY_UP:
-        world.control.thrusting = true;
-        break;
-    case GLUT_KEY_LEFT:
-        world.control.turningLeft = true;
-        break;
-    case GLUT_KEY_RIGHT:
-        world.control.turningRight = true;
-        break;
+    if (!neuralControlEnabled) { // Only allow manual control when neural network is disabled
+        int time = glutGet(GLUT_ELAPSED_TIME);
+        switch (key){
+        case GLUT_KEY_UP:
+            world.control.thrusting = true;
+            break;
+        case GLUT_KEY_LEFT:
+            world.control.turningLeft = true;
+            break;
+        case GLUT_KEY_RIGHT:
+            world.control.turningRight = true;
+            break;
+        }
     }
 }
 
 void onSpecialKeyUp(int key, int x, int y){
-    switch (key){
-    case GLUT_KEY_UP:
-        world.control.thrusting = false;
-        break;
-    case GLUT_KEY_LEFT:
-        world.control.turningLeft = false;
-        break;
-    case GLUT_KEY_RIGHT:
-        world.control.turningRight = false;
-        break;
+    if (!neuralControlEnabled) { // Only allow manual control when neural network is disabled
+        switch (key){
+        case GLUT_KEY_UP:
+            world.control.thrusting = false;
+            break;
+        case GLUT_KEY_LEFT:
+            world.control.turningLeft = false;
+            break;
+        case GLUT_KEY_RIGHT:
+            world.control.turningRight = false;
+            break;
+        }
     }
 }
 
@@ -68,14 +84,30 @@ void displayScore(){
         glutBitmapCharacter(GLUT_BITMAP_9_BY_15, s[i]);
         i++;
     }
+    
+    // Display control mode
+    glRasterPos2i(1, ORTHO_MAX - 6);
+    std::string mode = neuralControlEnabled ? "Neural Control (N to toggle)" : "Manual Control (N to toggle)";
+    i = 0;
+    while (i < mode.size()) {
+        glutBitmapCharacter(GLUT_BITMAP_9_BY_15, mode[i]);
+        i++;
+    }
 }
 
 void stepWorld(World& world, int delta);
 void onUpdate() {
     int time = glutGet(GLUT_ELAPSED_TIME);
+    
+    // Update neural network control if enabled
+    if (neuralControlEnabled) {
+        updateNeuralControl(world);
+    }
+    
     stepWorld(world, time - lastUpdateTime);
     lastUpdateTime = time;
     glutPostWindowRedisplay(windowWorld);
+    glutPostWindowRedisplay(windowNeural); // Also update neural network display
 }
 
 void drawWorld(World world);
@@ -98,16 +130,25 @@ void drawNeuralNetwork(
 void onDisplayNeural() {
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // Example network parameters
-    std::vector<size_t> config = {3, 4, 2};  // Input layer: 3, Hidden: 4, Output: 2
-    std::vector<Eigen::MatrixXf> weights = {
-        Eigen::MatrixXf::Random(4, 4),  // Random weights between input and hidden
-        Eigen::MatrixXf::Random(2, 5)   // Random weights between hidden and output
-    };
-    std::vector<float> inputs = {0.5f, 0.2f, 0.8f};
-    std::vector<float> outputs = {0.7f, 0.3f};
-
-    drawNeuralNetwork(config, weights, inputs, outputs, 800.0f, 800.0f, true);
+    if (g_neuralNetwork && neuralControlEnabled) {
+        // Get current sensor inputs and outputs
+        std::vector<float> inputs = getSensorInputs(world);
+        std::vector<float> outputs = g_neuralNetwork->feedForward(inputs);
+        
+        // Show the actual network being used
+        std::vector<size_t> config = {13, 8, 4};  // Input: 13, Hidden: 8, Output: 4
+        drawNeuralNetwork(config, g_neuralNetwork->weights, inputs, outputs, 800.0f, 800.0f, true);
+    } else {
+        // Show example network when neural control is disabled
+        std::vector<size_t> config = {13, 8, 4};
+        std::vector<Eigen::MatrixXf> weights = {
+            Eigen::MatrixXf::Random(8, 14),  // Random weights (input + bias -> hidden)
+            Eigen::MatrixXf::Random(4, 9)   // Random weights (hidden + bias -> output)
+        };
+        std::vector<float> inputs(13, 0.0f);
+        std::vector<float> outputs(4, 0.0f);
+        drawNeuralNetwork(config, weights, inputs, outputs, 800.0f, 800.0f, true);
+    }
 
     glutSwapBuffers();
 }
