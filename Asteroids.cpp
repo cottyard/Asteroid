@@ -23,10 +23,10 @@ World initWorld(){
 	w.player.xv = 0;
 	w.player.yv = 0;
 	w.player.angle = 90;
-	w.turning_left = 0;
-	w.turning_right = 0;
-	w.thrusting = 0;
-	w.shooting = false;
+	w.control.turningLeft = 0;
+	w.control.turningRight = 0;
+	w.control.thrusting = 0;
+	w.control.shooting = false;
 	w.alive = true;
 	return w;
 }
@@ -102,18 +102,18 @@ Motion stepMotion(Motion last, double delta, double screenWrap  = 1.0) {
 
 void stepWorld(World& world, int delta) {
 	if (world.alive) {
-		if (world.turning_left){
+		if (world.control.turningLeft){
 	        world.player.angle = world.player.angle + delta * 0.3;
 	    }
-	    if (world.turning_right){
+	    if (world.control.turningRight){
 	        world.player.angle = world.player.angle - delta * 0.3;
 	    }
-	    if (world.thrusting){
+	    if (world.control.thrusting){
 	        double acceleration = delta * 0.00003;
 	        world.player.xv = world.player.xv + cos(world.player.angle*PI/180.0) * acceleration;
 	        world.player.yv = world.player.yv + sin(world.player.angle*PI/180.0) * acceleration;
 	    }
-	    if (world.shooting && world.shootTimer >= shootCooldown) {
+	    if (world.control.shooting && world.shootTimer >= shootCooldown) {
 	        world.bullets.push_back(initBullet(world.player));
 	        world.shootTimer = 0;
 	    }

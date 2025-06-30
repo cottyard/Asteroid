@@ -15,7 +15,7 @@ void onKeyPressed(unsigned char key, int px, int py) {
         exit(0);
         break;
     case ' ':
-        if (world.alive) world.shooting = true;
+        if (world.alive) world.control.shooting = true;
         else world = initWorld();
         break;        
     }
@@ -24,7 +24,7 @@ void onKeyPressed(unsigned char key, int px, int py) {
 void onKeyUp(unsigned char key, int px, int py) {
     switch (key) {
     case ' ':
-        world.shooting = false;
+        world.control.shooting = false;
         break;
     }
 }
@@ -33,13 +33,13 @@ void onSpecialKeyPressed(int key, int x, int y){
     int time = glutGet(GLUT_ELAPSED_TIME);
     switch (key){
     case GLUT_KEY_UP:
-        world.thrusting = true;
+        world.control.thrusting = true;
         break;
     case GLUT_KEY_LEFT:
-        world.turning_left = true;
+        world.control.turningLeft = true;
         break;
     case GLUT_KEY_RIGHT:
-        world.turning_right = true;
+        world.control.turningRight = true;
         break;
     }
 }
@@ -47,13 +47,13 @@ void onSpecialKeyPressed(int key, int x, int y){
 void onSpecialKeyUp(int key, int x, int y){
     switch (key){
     case GLUT_KEY_UP:
-        world.thrusting = false;
+        world.control.thrusting = false;
         break;
     case GLUT_KEY_LEFT:
-        world.turning_left = false;
+        world.control.turningLeft = false;
         break;
     case GLUT_KEY_RIGHT:
-        world.turning_right = false;
+        world.control.turningRight = false;
         break;
     }
 }

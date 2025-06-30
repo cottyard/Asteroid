@@ -28,15 +28,19 @@ struct Asteroid {
     Motion motion{};
 };
 
+struct Control {
+	bool shooting;
+	bool turningLeft;
+	bool turningRight;
+	bool thrusting;
+};
+
 struct World {
 	int score = 0;
 	int spawnTimer = 0;	
 	int shootTimer = 0;
 	bool alive;
-	bool shooting;
-	bool turning_left;
-	bool turning_right;
-	bool thrusting;
+	Control control;
 	Motion player;
 	std::vector<Motion> bullets;
 	std::vector<Asteroid> asteroids;

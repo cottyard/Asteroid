@@ -29,7 +29,7 @@ void drawWorld(World world){
 	    glVertex2f(playerRearRight.x, playerRearRight.y);
 	    glVertex2f(playerFront.x, playerFront.y);
 	    glEnd();
-	    if (world.thrusting) {
+	    if (world.control.thrusting) {
 	        glColor3f(1.0, 0.0, 0.0);
 	        glBegin(GL_LINE_STRIP);
 	        glVertex2f(-0.75, -0.5);

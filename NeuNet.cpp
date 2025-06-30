@@ -88,7 +88,7 @@ public:
         }
     }
 
-    std::vector<float> feed_forward(const std::vector<float>& inputs) {
+    std::vector<float> feedForward(const std::vector<float>& inputs) {
         Eigen::VectorXf y = Eigen::Map<const Eigen::VectorXf>(inputs.data(), inputs.size());
 
         for (size_t i = 0; i < weights.size(); ++i) {
@@ -130,19 +130,19 @@ void drawCircle(float x, float y, float radius, float r, float g, float b) {
     glEnd();
 }
 
-//void drawRectangle(float x, float y, float width, float height, bool filled, float r, float g, float b) {
-//    glColor3f(r, g, b);
-//    if (filled) {
-//        glBegin(GL_QUADS);
-//    } else {
-//        glBegin(GL_LINE_LOOP);
-//    }
-//    glVertex2f(x, y);
-//    glVertex2f(x + width, y);
-//    glVertex2f(x + width, y + height);
-//    glVertex2f(x, y + height);
-//    glEnd();
-//}
+void drawRectangle(float x, float y, float width, float height, bool filled, float r, float g, float b) {
+    glColor3f(r, g, b);
+    if (filled) {
+        glBegin(GL_QUADS);
+    } else {
+        glBegin(GL_LINE_LOOP);
+    }
+    glVertex2f(x, y);
+    glVertex2f(x + width, y);
+    glVertex2f(x + width, y + height);
+    glVertex2f(x, y + height);
+    glEnd();
+}
 
 void drawLine(float x1, float y1, float x2, float y2, float width, float r, float g, float b) {
     glColor3f(r, g, b);
@@ -160,8 +160,7 @@ void drawNeuralNetwork(
     const std::vector<float>& outputs,
     float width, float height, bool bias
 ) {
-    // Draw outer rectangle
-    //drawRectangle(-width * 0.5, -height * 0.5, width, height, false, 1.0f, 1.0f, 1.0f);
+    drawRectangle(-width*0.6, -height*0.6, width*1.2, height*1.2, false, 1.0f, 1.0f, 1.0f);
 
     float vspace = height / (*std::max_element(config.begin(), config.end()) - 1);
     std::vector<std::pair<float, float>> prevLayerPositions;
@@ -176,6 +175,13 @@ void drawNeuralNetwork(
             float y = j * vspace - (layerSize - 1) * vspace * 0.5f;
             currLayerPositions.emplace_back(x, y);
             drawCircle(x, y, 20.0f, 1.0f, 1.0f, 1.0f);
+            if (i == 0 && j < inputs.size()) {
+                std::string input_text = std::to_string(inputs[j]).substr(0, 4); // Format input
+                drawText(x - 0.03f, y - 0.02f, input_text);
+            } else if (i == config.size() - 1 && j < outputs.size()) {
+                std::string output_text = std::to_string(outputs[j]).substr(0, 4); // Format output
+                drawText(x + 0.02f, y, output_text);
+            }
         }
 
         if (i > 0) {
